@@ -174,28 +174,27 @@
 
 /*-----------------------------------------------------------*/
 
-    #if ( configNUMBER_OF_CORES == 1 )
-        #define taskSELECT_HIGHEST_PRIORITY_TASK()                                       \
-    do {                                                                                 \
-        UBaseType_t uxTopPriority = uxTopReadyPriority;                                  \
-                                                                                         \
-        /* Find the highest priority queue that contains ready tasks. */                 \
-        while( listLIST_IS_EMPTY( &( pxReadyTasksLists[ uxTopPriority ] ) ) != pdFALSE ) \
-        {                                                                                \
-            configASSERT( uxTopPriority );                                               \
-            --uxTopPriority;                                                             \
-        }                                                                                \
-                                                                                         \
-        /* listGET_OWNER_OF_NEXT_ENTRY indexes through the list, so the tasks of \
-         * the  same priority get an equal share of the processor time. */                    \
-        listGET_OWNER_OF_NEXT_ENTRY( pxCurrentTCB, &( pxReadyTasksLists[ uxTopPriority ] ) ); \
-        uxTopReadyPriority = uxTopPriority;                                                   \
-    } while( 0 ) /* taskSELECT_HIGHEST_PRIORITY_TASK */
-    #else /* if ( configNUMBER_OF_CORES == 1 ) */
-
-        #define taskSELECT_HIGHEST_PRIORITY_TASK( xCoreID )    prvSelectHighestPriorityTask( xCoreID )
-
-    #endif /* if ( configNUMBER_OF_CORES == 1 ) */
+#if ( configNUMBER_OF_CORES == 1 )
+    #define taskSELECT_HIGHEST_PRIORITY_TASK()                                       \
+    do {                                                                             \
+        UBaseType_t uxTopPriority = 0;                                               \
+                                                                                     \
+        /* Find the lowest priority queue that contains ready tasks. */               \
+        while (uxTopPriority < configMAX_PRIORITIES &&                               \
+               listLIST_IS_EMPTY(&(pxReadyTasksLists[uxTopPriority])) != pdFALSE)    \
+        {                                                                            \
+            ++uxTopPriority;                                                         \
+        }                                                                            \
+        configASSERT(uxTopPriority < configMAX_PRIORITIES);                         \
+                                                                                     \
+        /* listGET_OWNER_OF_NEXT_ENTRY indexes through the list, so the tasks of     \
+         * the same priority get an equal share of the processor time. */            \
+        listGET_OWNER_OF_NEXT_ENTRY(pxCurrentTCB, &(pxReadyTasksLists[uxTopPriority])); \
+        uxTopReadyPriority = uxTopPriority;                                          \
+    } while (0) /* taskSELECT_HIGHEST_PRIORITY_TASK */
+#else /* if ( configNUMBER_OF_CORES == 1 ) */
+    #define taskSELECT_HIGHEST_PRIORITY_TASK( xCoreID ) prvSelectHighestPriorityTask( xCoreID )
+#endif /* if ( configNUMBER_OF_CORES == 1 ) */
 
 /*-----------------------------------------------------------*/
 
